@@ -1,0 +1,102 @@
+name: Sync SpotX to Modded Spot X
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync-repos:
+    permissions:
+      contents: write  # Allow write permissions for the repository contents
+    runs-on: ubuntu-latest  # Use Ubuntu runner for the job
+    
+    steps:
+      - name: Checkout SpotX repository
+        uses: actions/checkout@v2
+        with:
+          repository: SpotX-Official/SpotX
+          ref: main  # Use the main branch of the SpotX repository
+
+      - name: Checkout modded-spotx repository to a different directory
+        uses: actions/checkout@v2
+        with:
+          repository: SpotifyAdBlocker-org/modded-spotx
+          ref: main
+          path: original-spotx-repo  # Checkout to a new directory
+
+      - name: Copy only new or modified files from SpotX to original-spotx-repo
+        run: |
+          rsync -av --update --exclude='.git' --exclude='.github' --exclude='README.md' --exclude='LICENSE' ./ original-spotx-repo/
+
+      - name: Modify run.ps1 to add unique exit numbers
+        run: |
+          SCRIPT_PATH="original-spotx-repo/run.ps1"
+          if [ -f "$SCRIPT_PATH" ]; then
+            awk 'BEGIN { IGNORECASE=1 } {
+              if ($0 ~ /exit/) {
+                exit_num++;
+                $0 = $0 " " exit_num;
+              }
+              print $0;
+            }' $SCRIPT_PATH > temp.ps1 && mv temp.ps1 $SCRIPT_PATH
+          else
+            echo "run.ps1 not found!"
+            exit 1
+          fi
+
+      - name: Modify run.ps1 to change the line with $replacedText
+        run: |
+          RUN_PS1_FILE="original-spotx-repo/run.ps1"
+          if [ -f "$RUN_PS1_FILE" ]; then
+            sed -i 's|\$replacedText = \$replace -f \$svg_git, \$svg_tg, \$svg_faq|$replacedText = $replace|' "$RUN_PS1_FILE"
+          else
+            echo "run.ps1 not found!"
+            exit 1
+          fi
+    
+      - name: Modify ProcessName filter in run.ps1
+        run: |
+          RUN_PS1_PATH="original-spotx-repo/run.ps1"
+          if [ -f "$RUN_PS1_PATH" ]; then
+            echo "Modifying $RUN_PS1_PATH"
+            sed -i 's|\$_\.ProcessName -ilike "\*spotify\*"|$\_.ProcessName -ilike "\*spotify\*" -and $\_.ProcessName -inotlike "\*spotifyAB\*"|g' "$RUN_PS1_PATH"
+          else
+            echo "Error: $RUN_PS1_PATH not found"
+            exit 1
+          fi
+    
+      - name: Replace URLs in run.ps1
+        run: |
+          # Set the file path to run.ps1
+          RUN_PS1_PATH="original-spotx-repo/run.ps1"
+  
+          if [ -f "$RUN_PS1_PATH" ]; then
+            sed -i 's|https://spotx-official.github.io/SpotX|https://spotifyadblocker-org.github.io/modded-spotx/|g' "$RUN_PS1_PATH"
+            sed -i 's|https://raw.githubusercontent.com/SpotX-Official/SpotX/main|https://raw.githubusercontent.com/SpotifyAdBlocker-org/modded-spotx/main|g' "$RUN_PS1_PATH"
+          else
+            echo "Error: $RUN_PS1_PATH not found"
+            exit 1
+          fi
+
+      - name: Modify patches.json to replace description value 
+        run: |
+          PATCHES_FILE="original-spotx-repo/patches/patches.json"
+          NEW_HTML="<h2>About Spotify AdBlocker (SpotifyAB)</h2><br><details><summary><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24'><path d='M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z' fill='#1DB954'/></svg>GitHub</summary><a href='https://github.com/SpotifyAdBlocker-org/Client'>Spotify AdBlocker (spotifyAB)</a><br><br/></details><br><h4>DISCLAIMER</h4><p>Spotify AdBlocker (spotifyAB) is a utility to block ads in Spotify. Use it at your own risk.</p>"
+
+          if [ -f "$PATCHES_FILE" ]; then
+            # Use jq to modify the JSON: replace description (if string) and remove byspotx key
+            jq --arg new_html "$NEW_HTML" \
+              'del(.others.byspotx) | 
+               .others.discriptions.replace |= sub("<h3>More about SpotX</h3>.*"; $new_html)' "$PATCHES_FILE" > temp.json && mv temp.json "$PATCHES_FILE"
+          else
+            echo "patches.json not found!"
+            exit 1
+          fi
+          
+      - name: Commit changes and push to private repo
+        run: |
+          cd original-spotx-repo
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Sync SpotX to modded-spotx"
+          git push origin main
