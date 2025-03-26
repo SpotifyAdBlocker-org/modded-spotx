@@ -325,7 +325,7 @@ function CallLang($clg) {
     catch {
         Write-Host "Error loading $clg language"
         Pause
-        Exit 1 1
+        Exit 1
     }
 }
 
@@ -559,7 +559,7 @@ function downloadSp() {
             Start-Sleep -Milliseconds 200
             Remove-Item -Recurse -LiteralPath $tempDirectory
             Pause
-            Exit 2 2
+            Exit 2
         }
     }
 } 
@@ -641,7 +641,7 @@ if ($win10 -or $win11 -or $win8_1 -or $win8 -or $win12) {
         if ($ch -eq 'n') {
             Read-Host ($lang).StopScript 
             Pause
-            Exit 3 3
+            Exit 3
         }
     }
 }
@@ -867,7 +867,7 @@ if ($spotifyInstalled) {
                 Start-Sleep -Milliseconds 200
                 Remove-Item -Recurse -LiteralPath $tempDirectory 
                 Pause
-                Exit 4 4
+                Exit 4
             }
         }
     }
@@ -1002,7 +1002,7 @@ if ($webjson -eq $null) {
     Start-Sleep -Milliseconds 200
     Remove-Item -Recurse -LiteralPath $tempDirectory 
     Pause
-    Exit 5 5
+    Exit 5
 
 }
 
@@ -1608,7 +1608,7 @@ if ($test_spa -and $test_js) {
     Write-Host ($lang).FileLocBroken
     Write-Host ($lang).StopScript
     pause
-    Exit 6 6
+    Exit 6
 }
 
 if ($test_js) {
@@ -1627,14 +1627,14 @@ if ($test_js) {
 
     Write-Host ($lang).StopScript
     Pause
-    Exit 7 7
+    Exit 7
 }  
 
 if (!($test_js) -and !($test_spa)) { 
     Write-Host "xpui.spa not found, reinstall Spotify"
     Write-Host ($lang).StopScript
     Pause
-    Exit 8 8
+    Exit 8
 }
 
 If ($test_spa) {
@@ -1667,7 +1667,7 @@ If ($test_spa) {
         else {
             Write-Host ($lang).NoRestore`n
             Pause
-            Exit 9 9
+            Exit 9
         }
         $spotify_exe_bak_patch = Join-Path $env:APPDATA 'Spotify\Spotify.bak'
         $test_spotify_exe_bak = Test-Path -Path $spotify_exe_bak_patch
