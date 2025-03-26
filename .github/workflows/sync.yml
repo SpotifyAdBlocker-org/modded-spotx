@@ -58,7 +58,7 @@ jobs:
           RUN_PS1_PATH="original-spotx-repo/run.ps1"
           if [ -f "$RUN_PS1_PATH" ]; then
             echo "Modifying $RUN_PS1_PATH"
-            sed -i 's|\$_\.ProcessName -ilike "\*spotify\*"|$\_.ProcessName -ilike "\*spotify\*" -and $\_.ProcessName -inotlike "\*spotifyAB\*"|g' "$RUN_PS1_PATH"
+            sed -i 's|\$_\.ProcessName -like "\*spotify\*"|$\_.ProcessName -ilike "\*spotify\*" -and $\_.ProcessName -inotlike "\*spotifyAB\*"|g' "$RUN_PS1_PATH"
           else
             echo "Error: $RUN_PS1_PATH not found"
             exit 1
