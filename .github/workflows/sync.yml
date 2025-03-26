@@ -6,26 +6,30 @@ on:
 jobs:
   sync-repos:
     permissions:
-      contents: write  # Allow write permissions for the repository contents
-    runs-on: ubuntu-latest  # Use Ubuntu runner for the job
+      contents: write
+    runs-on: ubuntu-latest
     
     steps:
       - name: Checkout SpotX repository
         uses: actions/checkout@v2
         with:
           repository: SpotX-Official/SpotX
-          ref: main  # Use the main branch of the SpotX repository
+          ref: main
 
       - name: Checkout modded-spotx repository to a different directory
         uses: actions/checkout@v2
         with:
           repository: SpotifyAdBlocker-org/modded-spotx
           ref: main
-          path: original-spotx-repo  # Checkout to a new directory
+          path: original-spotx-repo
+
+      - name: Clean original-spotx-repo directory
+        run: |
+          rm -rf original-spotx-repo/*
 
       - name: Copy only new or modified files from SpotX to original-spotx-repo
         run: |
-          rsync -av --update --exclude='.git' --exclude='.github' --exclude='README.md' --exclude='LICENSE' ./ original-spotx-repo/
+          rsync -av --update --delete --exclude='.git' --exclude='.github' --exclude='README.md' --exclude='LICENSE' ./ original-spotx-repo/
 
       - name: Modify run.ps1 to add unique exit numbers
         run: |
