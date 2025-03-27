@@ -89,7 +89,6 @@ jobs:
           if [ -f "$PATCHES_FILE" ]; then
             # Use jq to modify the JSON: replace description (if string) and remove byspotx key
             jq --arg new_html "$NEW_HTML" \
-              'del(.others.byspotx) | 
                .others.discriptions.replace |= sub("<h3>More about SpotX</h3>.*"; $new_html)' "$PATCHES_FILE" > temp.json && mv temp.json "$PATCHES_FILE"
           else
             echo "patches.json not found!"
