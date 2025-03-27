@@ -1905,6 +1905,9 @@
       "match": "(permissionLevel:\"CONTRIBUTOR\".+?return)",
       "replace": "$1 null;"
     },
+    "byspotx": {
+      "add": "// Patched by SpotX"
+    },
     "disablesentry": {
       "version": {
         "fr": "1.1.70",
