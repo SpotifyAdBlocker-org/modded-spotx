@@ -23,9 +23,9 @@ jobs:
           ref: main
           path: original-spotx-repo
 
-      - name: Clean original-spotx-repo directory
+      - name: Clean original-spotx-repo directory except README.md
         run: |
-          rm -rf original-spotx-repo/*
+          find original-spotx-repo/* ! -name 'README.md' -exec rm -rf {} +
 
       - name: Copy only new or modified files from SpotX to original-spotx-repo
         run: |
